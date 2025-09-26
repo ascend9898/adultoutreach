@@ -11,7 +11,6 @@
       --text: #e9eef5;
       --muted: #9aa4b2;
       --accent: #4f8cff;
-      --accent-2: #7c4dff;
     }
     * { box-sizing: border-box; }
     html, body {
@@ -20,8 +19,6 @@
       background: var(--bg);
       color: var(--text);
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
       user-select: none;
       -webkit-user-select: none;
       -ms-user-select: none;
@@ -77,12 +74,12 @@
     }
     button:active { transform: translateY(1px); }
 
-    .output, .actions {
+    .output, .actions, .delay {
       background: rgba(255,255,255,0.03);
       border: 1px dashed rgba(255,255,255,0.12);
       border-radius: 12px;
       padding: 16px;
-      min-height: 60px;
+      min-height: 40px;
       white-space: pre-wrap;
       line-height: 1.6;
       font-size: 16px;
@@ -117,6 +114,7 @@
         <button id="btn-generate" title="Show a random message">Generate DM</button>
         <div id="output" class="output" aria-live="polite"></div>
         <div id="actions" class="actions" aria-live="polite"></div>
+        <div id="delay" class="delay" aria-live="polite"></div>
         <div class="note">Numbers are part of the message so VAs know which version they used. Remove the number before sending.</div>
       </div>
       <footer>
@@ -126,7 +124,6 @@
   </div>
 
   <script>
-    // Anti-copy / anti-select
     document.addEventListener('copy', (e) => { e.preventDefault(); });
     document.addEventListener('cut', (e) => { e.preventDefault(); });
     document.addEventListener('contextmenu', (e) => { e.preventDefault(); });
@@ -171,7 +168,7 @@
 ];
 
     const actionsList = [
-      "follow",
+      "FOLLOW",
       "MAKE 1 COMMENT",
       "LIKE 2 STORIES/HIGHLIGHTS",
       "LIKE 2 POSTS"
@@ -182,15 +179,19 @@
       return shuffled.slice(0, 2).join(" + ");
     }
 
-    let idx = -1;
+    function randomDelay() {
+      return Math.floor(Math.random() * (6 - 3 + 1)) + 3; // random 3-6
+    }
+
     const $out = document.getElementById('output');
     const $act = document.getElementById('actions');
+    const $delay = document.getElementById('delay');
 
     function random() {
       const r = Math.floor(Math.random() * messages.length);
-      idx = r;
-      $out.textContent = messages[idx];
-      $act.textContent = "Action: " + randomPair();
+      $out.textContent = messages[r];
+      $act.textContent = "✍🏼Action: " + randomPair();
+      $delay.textContent = "⌛Wait: " + randomDelay() + " minutes before next DM";
     }
 
     document.getElementById('btn-generate').addEventListener('click', random);
