@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Adult Outreach Generator</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card: #171a21;
+      --text: #e9eef5;
+      --muted: #9aa4b2;
+      --accent: #4f8cff;
+      --accent-2: #7c4dff;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      user-select: none;              /* disable selection */
+      -webkit-user-select: none;
+      -ms-user-select: none;
+    }
+
+    .container {
+      max-width: 760px;
+      margin: 40px auto;
+      padding: 24px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, #171a21 0%, #11141a 100%);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      overflow: hidden;
+    }
+
+    header {
+      padding: 26px 24px 8px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: 0.3px;
+    }
+
+    .subtitle {
+      margin: 6px 0 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .content {
+      padding: 20px 24px 28px 24px;
+    }
+
+    button {
+      background: linear-gradient(180deg, var(--accent) 0%, #2b5fd6 100%);
+      color: white;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.04s ease, filter 0.2s ease;
+      width: 100%;
+      margin-bottom: 16px;
+    }
+    button:active { transform: translateY(1px); }
+
+    .output {
+      background: rgba(255,255,255,0.03);
+      border: 1px dashed rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 16px;
+      min-height: 120px;
+      white-space: pre-wrap; /* show text as-is */
+      line-height: 1.6;
+      font-size: 16px;
+      user-select: none;             /* disable selection specifically */
+      -webkit-user-select: none;
+      -ms-user-select: none;
+    }
+
+    .note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    footer {
+      padding: 12px 24px 22px 24px;
+      color: var(--muted);
+      font-size: 12px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <header>
+        <h1>Adult Outreach Generator</h1>
+        <p class="subtitle">Shows one outreach line at a time (exact text, numbers included). Manual typing only.</p>
+      </header>
+      <div class="content">
+        <button id="btn-generate" title="Show a random message">Generate DM</button>
+        <div id="output" class="output" aria-live="polite"></div>
+        <div class="note">Numbers are part of the message so VAs know which version they used. Remove the number before sending.</div>
+      </div>
+      <footer>
+        Manually type the message - DO NOT COPY to avoid getting banned. Wait at least 5 minutes between messages. Do not take shortcuts the account can get banned
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    // Strict anti-copy / anti-select measures (casual prevention)
+    document.addEventListener('copy', (e) => { e.preventDefault(); });
+    document.addEventListener('cut', (e) => { e.preventDefault(); });
+    document.addEventListener('contextmenu', (e) => { e.preventDefault(); });
+    document.addEventListener('dragstart', (e) => { e.preventDefault(); });
+    document.addEventListener('keydown', (e) => {
+      const k = e.key.toLowerCase();
+      const meta = e.metaKey || e.ctrlKey;
+      // block common copy/select-all/inspect shortcuts
+      if (meta && (k === 'c' || k === 'x' || k === 'a' || k === 's' || k === 'u')) e.preventDefault();
+      if ((meta && k === 'p') || k === 'printscreen') e.preventDefault();
+    }, true);
+    document.addEventListener('selectionchange', () => {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount) sel.removeAllRanges();
+    });
+
+    // EXACT messages as provided by the user (do not modify)
+    const messages = [
+`1—  Hi NAME I’m Kelly Monroe’s assistant, she’s getting too many fans and can’t handle them. Do u want some extra fans for free?`,
+`2—  NAME I’m Kelly Monroe’s assistant, she has too many fans and can’t handle them. Can u handle some extra subs for free?`,
+`3—  NAME I’m Kelly Monroe’s intern, she has too many fans and can’t handle them. Can you handle extra subscribers for free?`,
+`4—  NAME I’m Kelly Monroe’s intern, she has too many subs and can’t handle them. Can u handle extra fans for free?`,
+`5—  NAME can you handle extra subscribers for free? I’m Kelly Monroe’s assistant, she has too many fans and can’t handle them`,
+`6—  Hi NAME I’m Kelly Monroe’s assistant, she has too many fans and can’t handle them. Want extra fans for free?`,
+`7—  NAME I’m Kelly Monroe’s intern, she’s getting too many subs and can’t handle them. Can you handle more fans for free?`,
+`8—  Hi NAME I’m Kelly Monroe’s intern, she has too many subscribers and can’t handle them. Do you want more subs for free?`,
+`9—  NAME I’m Kelly Monroe’s assistant, she has too many subs and can’t handle them. Can u handle extra fans for free?`,
+`10—  Hi NAME I’m Kelly Monroe’s intern, she’s getting too many fans and can’t handle them. Do u want some extra subs for free?`,
+`11—  NAME can you handle extra fans for free? I’m Kelly Monroe’s assistant, she has too many subs and can’t handle them`,
+`12—  Hi NAME, Kelly Monroe’s intern here. She has too many subs and can’t handle them. Do you want some extra fans for free?`,
+`13—  NAME I’m Kelly Monroe’s assistant, she’s getting too many subscribers and can’t handle them. Can u handle some extra fans for free?`,
+`14—  Hi NAME I’m Kelly Monroe’s assistant, she has too many subs and can’t handle them. Do u want extra subscribers for free?`,
+`15—  NAME I’m Kelly Monroe’s intern, she’s getting too many fans and can’t handle them. Can you handle some extra subs for free?`,
+`16—  Hi NAME I’m Kelly Monroe’s assistant, she has too many subscribers and can’t handle them. Do u extra fans for free?`,
+`17—  NAME I’m Kelly Monroe’s intern, she’s getting too many fans and can’t handle them. Can u handle some new subscribers for free?`,
+`18—  Hi NAME I’m Kelly Monroe’s intern, she has too many fans and can’t handle them. Do you want some new subscribers for free?`,
+`19—  NAME I’m Kelly Monroe’s assistant, she has too many subscribers and can’t handle them. Can u handle extra fans for free?`,
+`20—  Hi NAME I’m Kelly Monroe’s intern, she’s getting too many subs and can’t handle them. Do u want some extra fans for free?`,
+`21—  NAME can u handle extra subscribers for free? I’m Kelly Monroe’s assistant, she has too many fans and can’t handle them.`,
+`22—  Hi NAME, Kelly Monroe’s intern here. She has too many fans and can’t handle them. Do u want some extra subs for free?`,
+`23—  NAME I’m Kelly Monroe’s assistant, she’s getting too many fans and can’t handle them. Can u handle some new subscribers for free?`,
+`24—  Hi NAME I’m Kelly Monroe’s assistant, she has too many fans and can’t handle them. Do u want some extra subs for free?`,
+`25—  NAME I’m Kelly Monroe’s intern, she’s getting too many subscribers and can’t handle them. Can u handle some new fans for free?`
+];
+
+    let idx = -1;
+    const $out = document.getElementById('output');
+
+    function show(i) {
+      $out.textContent = messages[i];
+    }
+
+    function random() {
+      const r = Math.floor(Math.random() * messages.length);
+      idx = r;
+      show(idx);
+    }
+
+    document.getElementById('btn-generate').addEventListener('click', random);
+
+    // Show one on first load
+    random();
+  </script>
+</body>
+</html>
